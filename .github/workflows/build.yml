@@ -1,0 +1,55 @@
+name: Build T1000-E Tracker Firmware
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: GPS-30s
+            interval: 30
+          - name: GPS-10s
+            interval: 10
+    steps:
+      - name: Checkout tracker repo
+        uses: actions/checkout@v4
+
+      - name: Checkout MeshCore Companion v1.17.1
+        run: |
+          git clone --depth 1 --branch companion-v1.17.1 https://github.com/meshcore-dev/MeshCore.git meshcore
+
+      - name: Apply tracker defaults
+        working-directory: meshcore
+        run: |
+          chmod +x ../patch_t1000e_gps_default.sh
+          ../patch_t1000e_gps_default.sh ${{ matrix.interval }}
+          grep -n "gps_enabled\|gps_interval\|buzzer_quiet" examples/companion_radio/NodePrefs.h
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install PlatformIO
+        run: python -m pip install --upgrade platformio
+
+      - name: Build T1000-E BLE Companion
+        working-directory: meshcore
+        run: pio run -e t1000e_companion_radio_ble
+
+      - name: Verify UF2
+        working-directory: meshcore
+        run: |
+          test -f .pio/build/t1000e_companion_radio_ble/firmware.uf2
+          cp .pio/build/t1000e_companion_radio_ble/firmware.uf2 ../T1000E-MeshCore-v1.17.1-${{ matrix.name }}.uf2
+          ls -lh ../T1000E-MeshCore-v1.17.1-${{ matrix.name }}.uf2
+
+      - name: Upload UF2 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: T1000E-MeshCore-v1.17.1-${{ matrix.name }}
+          path: T1000E-MeshCore-v1.17.1-${{ matrix.name }}.uf2
