@@ -2,6 +2,8 @@ name: Build T1000-E Tracker Firmware
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
 
 jobs:
   build:
