@@ -20,15 +20,15 @@ hs = h.read_text()
 cs = c.read_text()
 
 # Add the beta method declaration.
-needle = 'bool advert();\n'
+needle = '  bool advert();\n'
 insert = needle + '  void autoTrackerLoop();\n'
 if 'void autoTrackerLoop();' not in hs:
     if needle not in hs:
         raise SystemExit('MyMesh.h: advert declaration not found')
     hs = hs.replace(needle, insert, 1)
 
-# Add beta state fields.
-needle = '  bool send_unscoped; // force un-scoped flood (instead of using send_scope)\n'
+# Add beta state fields. v1.17.1 uses three spaces before send_unscoped.
+needle = '  bool send_unscoped;   // force un-scoped flood (instead of using send_scope)\n'
 insert = needle + '''  // HTR Auto Tracker BETA state\n  bool auto_tracker_have_position;\n  double auto_tracker_last_lat;\n  double auto_tracker_last_lon;\n  unsigned long auto_tracker_next_check;\n'''
 if 'auto_tracker_have_position' not in hs:
     if needle not in hs:
@@ -63,5 +63,4 @@ h.write_text(hs)
 c.write_text(cs)
 PY
 
-# Verify the expected changes landed.
 grep -n "autoTrackerLoop\|auto_tracker_" examples/companion_radio/MyMesh.h examples/companion_radio/MyMesh.cpp
