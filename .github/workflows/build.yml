@@ -43,7 +43,11 @@ jobs:
         working-directory: meshcore
         run: pio run -e t1000e_companion_radio_ble
 
-      - name: Verify UF2
+      - name: Create UF2
+        working-directory: meshcore
+        run: pio run -e t1000e_companion_radio_ble -t create_uf2
+
+      - name: Verify and collect UF2
         working-directory: meshcore
         run: |
           test -f .pio/build/t1000e_companion_radio_ble/firmware.uf2
